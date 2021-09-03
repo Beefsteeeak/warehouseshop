@@ -12,6 +12,12 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 
+import environ
+
+env_file = Path(__file__).parent.parent.parent.parent.joinpath("config/backend/shop", ".env")
+environ.Env.read_env(env_file=env_file.as_posix())
+env = environ.Env(DJANGO_DEBUG=bool)
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,12 +26,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-s4*xop!vap)@a6)wbn1-n8p$-%zdfanfox&1!khw8bhfb-yl-g'
+SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env("DJANGO_DEBUG", default=True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -37,6 +43,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
+
+    'django_extensions',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -74,11 +84,10 @@ WSGI_APPLICATION = 'shop.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": env.db("DATABASE_URL"),
 }
+
+DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
 
 
 # Password validation
@@ -117,9 +126,86 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
+STATICFILES_DIRS = (
+    BASE_DIR.joinpath("static"),
+)
+STATIC_ROOT = BASE_DIR.joinpath("static")
+MEDIA_ROOT = BASE_DIR.joinpath("media")
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# CELERY
+
+CELERY_TASK_RESULT_EXPIRES = 3600
+
+# Cache
+
+USER_AGENTS_CACHE = "default"
+
+REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")
+REDIS_CACHE = env("REDIS_CACHE", default="redis:6379")
+AMQP_URL = env("AMQP_URL", default="amqp://rabbitmq:5672")
+
+BROKER_URL = AMQP_URL
+CELERY_result_backend = REDIS_URL
+CELERY_BROKER_URL = BROKER_URL
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": [
+            REDIS_URL,
+        ],
+        "OPTIONS": {
+            "CONNECTION_POOL_CLASS": "redis.BlockingConnectionPool",
+            "CONNECTION_POOL_CLASS_KWARGS": {
+                "max_connections": 50,
+                "timeout": 20,
+            },
+            "MAX_CONNECTIONS": 1000,
+            "PICKLE_VERSION": -1,
+        },
+    },
+}
+
+# Email
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "mailhog"
+EMAIL_PORT = "25"
+EMAIL_HOST_USER = ""
+EMAIL_HOST_PASSWORD = ""
+EMAIL_USE_SSL = False
+
+# Security
+
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = False
+CORS_ORIGIN_ALLOW_ALL = True
+
+DOMAIN = "localhost"
+SCHEMA = "http"
+
+INSTALLED_APPS += [
+    "silk",
+    "debug_toolbar",
+]
+
+MIDDLEWARE += [
+    "silk.middleware.SilkyMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+]
+
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK": lambda request: DEBUG,
+}
+
+SILKY_PYTHON_PROFILER = True
+SILKY_META = True

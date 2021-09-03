@@ -1,0 +1,114 @@
+version: "3.8"
+
+services:
+
+  shop:
+    container_name: shop
+    build:
+      context: .
+      dockerfile: ./docker/backend/shop/Dockerfile
+    networks:
+      - shop_network
+      - nginx_network
+      - app_network
+    expose:
+      - 8000
+    environment:
+      DATABASE_PORT: '5432'
+    env_file:
+      - ./config/backend/shop/.env
+    restart: on-failure
+    depends_on:
+      - redis
+    command: sh /runserver.sh
+
+
+  warehouse:
+    container_name: warehouse
+    build:
+      context: .
+      dockerfile: ./docker/backend/warehouse/Dockerfile
+    networks:
+      - nginx_network
+      - app_network
+    expose:
+      - 8001
+    environment:
+      DATABASE_PORT: '5432'
+    env_file:
+      - ./config/backend/warehouse/.env
+    restart: on-failure
+    command: sh /runserver.sh
+
+
+  nginx:
+    container_name: nginx
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    restart: on-failure
+    networks:
+      - nginx_network
+    ports:
+      - 8000:8000
+      - 8001:8001
+    depends_on:
+      - shop
+      - warehouse
+
+
+  redis:
+    container_name: redis
+    image: redis:5.0.6-alpine
+    restart: on-failure
+    networks:
+      - shop_network
+    expose:
+      - 6379
+    volumes:
+      - redis:/var/lib/redis/data
+
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3.8.0-alpine
+    restart: on-failure
+    networks:
+      - shop_network
+    expose:
+      - 4369
+      - 5671
+      - 5672
+      - 15672
+      - 25672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+
+  celery:
+    container_name: celery
+    build:
+      context: .
+      dockerfile: ./docker/backend/shop/Dockerfile
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+    expose: []
+    networks:
+      - shop_network
+      - app_network
+    environment:
+      C_FORCE_ROOT: 'true'
+      CHECK_WEB: 'true'
+    env_file:
+      - ./config/backend/shop/.env
+
+
+networks:
+  shop_network:
+  nginx_network:
+  app_network:
+
+volumes:
+  rabbitmq_data:
+  redis:

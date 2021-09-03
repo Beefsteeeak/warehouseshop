@@ -36,7 +36,7 @@ RUN pip install -U --no-cache-dir pip
 WORKDIR /pysetup
 
 # Project initialization:
-COPY ./backend/shop .
+COPY ./backend/shop/requirements.txt .
 
 RUN pip install -r requirements.txt
 
