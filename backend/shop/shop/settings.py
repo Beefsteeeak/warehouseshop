@@ -132,8 +132,6 @@ STATICFILES_DIRS = (
 )
 STATIC_ROOT = BASE_DIR.joinpath("static")
 MEDIA_ROOT = BASE_DIR.joinpath("media")
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -189,6 +187,11 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_SSL_REDIRECT = False
 CORS_ORIGIN_ALLOW_ALL = True
+
+STATIC_ROOT = BASE_DIR.joinpath("..", "staticfiles")
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+
 
 DOMAIN = "localhost"
 SCHEMA = "http"

@@ -70,7 +70,7 @@ services:
       - mailhog_network
     environment:
       DJANGO_DEBUG: 1
-      DATABASE_URL: 'postgresql://postgres:postgres@warehouse:5432/dev_db'
+      DATABASE_URL: 'postgresql://postgres:postgres@warehousedb:5432/dev_db'
       DATABASE_HOST: 'warehousedb'
     depends_on:
       - warehousedb
