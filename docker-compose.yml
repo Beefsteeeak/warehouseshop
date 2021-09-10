@@ -2,6 +2,24 @@ version: "3.8"
 
 services:
 
+
+  shopdb:
+    container_name: shopdb
+    image: postgres:latest
+    restart: on-failure
+    volumes:
+      - shopdb-data:/var/lib/postgresql/data
+    networks:
+      - shop_network
+    expose:
+      - 5432
+    env_file: ./config/backend/shop/.env
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+      POSTGRES_DB: 'dev_db'
+
+
   shop:
     container_name: shop
     build:
@@ -10,6 +28,9 @@ services:
       target: development_build
       args:
         DJANGO_ENV: 'dev'
+    volumes:
+      - ./backend/shop:/code
+      - ./config/backend/shop:/config/backend/shop
     networks:
       - shop_network
       - nginx_network
@@ -17,13 +38,34 @@ services:
     expose:
       - 8000
     environment:
+      DJANGO_DEBUG: 1
+      DATABASE_URL: 'postgresql://postgres:postgres@shopdb:5432/dev_db'
+      DATABASE_HOST: 'shopdb'
       DATABASE_PORT: '5432'
     env_file:
       - ./config/backend/shop/.env
     restart: on-failure
     depends_on:
       - redis
+      - shopdb
     command: sh /runserver.sh
+
+
+  warehousedb:
+    container_name: warehousedb
+    image: postgres:latest
+    restart: on-failure
+    volumes:
+      - warehousedb-data:/var/lib/postgresql/data
+    networks:
+      - warehouse_network
+    expose:
+      - 5432
+    env_file: ./config/backend/warehouse/.env
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+      POSTGRES_DB: 'dev_db'
 
 
   warehouse:
@@ -31,16 +73,29 @@ services:
     build:
       context: .
       dockerfile: ./docker/backend/warehouse/Dockerfile
+      target: development_build
+      args:
+        DJANGO_ENV: 'dev'
+    volumes:
+      - ./backend/warehouse:/code
+      - ./config/backend/warehouse:/config/backend/warehouse
     networks:
       - nginx_network
       - app_network
+      - warehouse_network
+      - mailhog_network
     expose:
       - 8001
     environment:
+      DJANGO_DEBUG: 1
+      DATABASE_URL: 'postgresql://postgres:postgres@warehousedb:5432/dev_db'
+      DATABASE_HOST: 'warehousedb'
       DATABASE_PORT: '5432'
     env_file:
       - ./config/backend/warehouse/.env
     restart: on-failure
+    depends_on:
+      - warehousedb
     command: sh /runserver.sh
 
 
@@ -49,15 +104,18 @@ services:
     build:
       context: .
       dockerfile: ./docker/nginx/Dockerfile
+      target: development_build
     restart: on-failure
     networks:
       - nginx_network
     ports:
       - 8000:8000
       - 8001:8001
+      - 8025:8025
     depends_on:
       - shop
       - warehouse
+      - mailhog
 
 
   redis:
@@ -93,25 +151,61 @@ services:
     build:
       context: .
       dockerfile: ./docker/backend/shop/Dockerfile
-    restart: on-failure
-    depends_on:
-      - rabbitmq
+      target: development_build
+      args:
+        DJANGO_ENV: 'dev'
+    volumes:
+      - ./backend/shop:/code
+      - ./config/backend/shop:/config/backend/shop
     expose: []
     networks:
       - shop_network
       - app_network
+      - mailhog_network
     environment:
       C_FORCE_ROOT: 'true'
+      DATABASE_URL: 'postgresql://postgres:postgres@shopdb:5432/dev_db'
+      DATABASE_HOST: 'shopdb'
+      DATABASE_PORT: '5432'
+      REDIS_URL: 'redis://redis:6379/0'
+      REDIS_CACHE: 'redis:6379'
+      AMQP_URL: 'amqp://rabbitmq:5672'
       CHECK_WEB: 'true'
+      WEB_HOST: 'shop'
+      WEB_PORT: '8000'
     env_file:
       - ./config/backend/shop/.env
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+      - redis
+      - shopdb
+    command: celery -A shop worker -B -l INFO
+
+
+  mailhog:
+    container_name: mailhog
+    image: mailhog/mailhog:latest
+    command: [ "-smtp-bind-addr", "0.0.0.0:25" ]
+    user: root
+    restart: on-failure
+    networks:
+      - nginx_network
+      - mailhog_network
+    expose:
+      - 25
+      - 8025
 
 
 networks:
   shop_network:
   nginx_network:
   app_network:
+  warehouse_network:
+  mailhog_network:
 
 volumes:
   rabbitmq_data:
   redis:
+  shopdb-data:
+  warehousedb-data:
