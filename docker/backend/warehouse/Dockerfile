@@ -1,12 +1,8 @@
-FROM python:latest as python_base
+FROM python:latest
 
 ARG DJANGO_ENV
 
 ENV DJANGO_ENV=${DJANGO_ENV} \
-    # env lang
-    LANG=C.UTF-8 \
-    LANGUAGE=C.UTF-8 \
-    LC_ALL=C.UTF-8 \
     # python:
     PYTHONFAULTHANDLER=1 \
     PYTHONUNBUFFERED=1 \
@@ -20,18 +16,6 @@ ENV DJANGO_ENV=${DJANGO_ENV} \
 
 RUN apt-get update
 
-# Install system dependencies
-RUN apt-get -y install \
-    gcc \
-    gettext \
-    libxml2-dev \
-    libxslt-dev \
-    libgdal-dev \
-    libproj-dev \
-    libgeos-dev \
-    libpq-dev \
-    python3-dev
-
 # Install python dependencies
 RUN pip install -U --no-cache-dir pip
 
@@ -41,9 +25,6 @@ WORKDIR /pysetup
 COPY ./backend/warehouse/requirements.txt .
 
 RUN pip install -r requirements.txt
-
-
-FROM python_base as development_build
 
 # Installing `dockerize` utility:
 # https://github.com/jwilder/dockerize
