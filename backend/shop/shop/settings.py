@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.gis',
 
     'django_extensions',
     'django_celery_results',
@@ -87,8 +86,6 @@ DATABASES = {
     "default": env.db("DATABASE_URL"),
 }
 
-DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -130,7 +127,7 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = (
     BASE_DIR.joinpath("static"),
 )
-STATIC_ROOT = BASE_DIR.joinpath("static")
+# STATIC_ROOT = BASE_DIR.joinpath("static")
 MEDIA_ROOT = BASE_DIR.joinpath("media")
 
 # Default primary key field type
@@ -197,13 +194,13 @@ DOMAIN = "localhost"
 SCHEMA = "http"
 
 INSTALLED_APPS += [
-    "silk",
-    "debug_toolbar",
+    # "silk",
+    # "debug_toolbar",
 ]
 
 MIDDLEWARE += [
-    "silk.middleware.SilkyMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    # "silk.middleware.SilkyMiddleware",
+    # "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 DEBUG_TOOLBAR_CONFIG = {

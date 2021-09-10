@@ -7,6 +7,9 @@ services:
     build:
       context: .
       dockerfile: ./docker/backend/shop/Dockerfile
+      target: development_build
+      args:
+        DJANGO_ENV: 'dev'
     networks:
       - shop_network
       - nginx_network

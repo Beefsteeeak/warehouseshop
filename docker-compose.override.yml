@@ -3,7 +3,7 @@ version: "3.8"
 services:
   shopdb:
     container_name: shopdb
-    image: postgis/postgis:12-master
+    image: postgres:latest
     restart: on-failure
     volumes:
       - shopdb-data:/var/lib/postgresql/data
@@ -26,7 +26,7 @@ services:
         DJANGO_ENV: 'dev'
     volumes:
       - ./backend/shop:/code
-      - ./config/backend/shop:/config
+      - ./config/backend/shop:/config/backend/shop
     environment:
       DJANGO_DEBUG: 1
       DATABASE_URL: 'postgresql://postgres:postgres@shopdb:5432/dev_db'
@@ -38,7 +38,7 @@ services:
 
   warehousedb:
     container_name: warehousedb
-    image: postgis/postgis:12-master
+    image: postgres:latest
     restart: on-failure
     volumes:
       - warehousedb-data:/var/lib/postgresql/data
@@ -62,7 +62,7 @@ services:
         DJANGO_ENV: 'dev'
     volumes:
       - ./backend/warehouse:/code
-      - ./config/backend/warehouse:/config
+      - ./config/backend/warehouse:/config/backend/warehouse
     networks:
       - nginx_network
       - app_network
@@ -86,7 +86,7 @@ services:
         DJANGO_ENV: 'dev'
     volumes:
       - ./backend/shop:/code
-      - ./config/backend/shop:/config
+      - ./config/backend/shop:/config/backend/shop
     networks:
       - shop_network
       - app_network
