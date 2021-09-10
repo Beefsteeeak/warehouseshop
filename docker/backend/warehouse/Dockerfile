@@ -1,23 +1,12 @@
 FROM python:latest
 
-ARG DJANGO_ENV
-
-ENV DJANGO_ENV=${DJANGO_ENV} \
+ENV \
     # python:
     PYTHONFAULTHANDLER=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONHASHSEED=random \
-    # pip:
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100 \
     # dockerize:
     DOCKERIZE_VERSION=v0.6.1
-
-RUN apt-get update
-
-# Install python dependencies
-RUN pip install -U --no-cache-dir pip
 
 WORKDIR /pysetup
 
