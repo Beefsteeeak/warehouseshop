@@ -3,6 +3,9 @@
 set -o errexit
 set -o nounset
 
+echo "Make migrations"
+python /code/manage.py makemigrations
+
 echo "Run manage.py migrate"
 python /code/manage.py migrate --noinput
 

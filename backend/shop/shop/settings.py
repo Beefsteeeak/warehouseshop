@@ -46,6 +46,10 @@ INSTALLED_APPS = [
 
     'django_extensions',
     'django_celery_results',
+
+    'authorisation.apps.AuthorisationConfig',
+    'books.apps.BooksConfig',
+    'orders.apps.OrdersConfig',
 ]
 
 MIDDLEWARE = [
@@ -85,6 +89,10 @@ WSGI_APPLICATION = 'shop.wsgi.application'
 DATABASES = {
     "default": env.db("DATABASE_URL"),
 }
+
+# Specifying custom user model
+
+AUTH_USER_MODEL = 'authorisation.CustomUser'
 
 
 # Password validation
