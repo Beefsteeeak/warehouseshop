@@ -11,12 +11,12 @@ class Order(models.Model):
         (3, "done")
     )
 
-    user = models.ForeignKey(CustomUser)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, default=1)
     timestamp = models.DateTimeField(auto_now_add=True)
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order)
-    book = models.ForeignKey(Book)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField()
